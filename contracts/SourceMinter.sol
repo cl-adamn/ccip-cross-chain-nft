@@ -33,14 +33,23 @@ contract SourceMinter is Withdraw {
     function mint(
         uint64 destinationChainSelector,
         address receiver,
-        PayFeesIn payFeesIn
+        PayFeesIn payFeesIn,
+        address _seller,
+        address _token,
+        uint256 _amount
     ) external {
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver),
-            data: abi.encodeWithSignature("mint(address)", msg.sender),
-            tokenAmounts: new Client.EVMTokenAmount[](0),
+            data: abi.encodeWithSignature("mint(address,address,uint256)", msg.sender, _seller, _amount),
+            tokenAmounts: new Client.EVMTokenAmount[](1),
             extraArgs: "",
             feeToken: payFeesIn == PayFeesIn.LINK ? i_link : address(0)
+        });
+
+        // Set token and amount in the EVMTokenAmount struct
+        message.tokenAmounts[0] = Client.EVMTokenAmount({
+            _token: _token,
+            _amount: _amount
         });
 
         uint256 fee = IRouterClient(i_router).getFee(

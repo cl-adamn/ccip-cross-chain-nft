@@ -1,26 +1,42 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.19;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-/**
- * THIS IS AN EXAMPLE CONTRACT THAT USES HARDCODED VALUES FOR CLARITY.
- * THIS IS AN EXAMPLE CONTRACT THAT USES UN-AUDITED CODE.
- * DO NOT USE THIS CODE IN PRODUCTION.
- */
-contract MyNFT is ERC721URIStorage, Ownable {
-    string constant TOKEN_URI =
-        "https://ipfs.io/ipfs/QmYuKY45Aq87LeL1R5dhb1hqHLp6ZFbJaCP8jxqKM1MX6y/babe_ruth_1.json";
-    uint256 internal tokenId;
-
-    constructor() ERC721("MyNFT", "MNFT") {}
-
-    function mint(address to) public onlyOwner {
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, TOKEN_URI);
-        unchecked {
-            tokenId++;
-        }
+contract MyNFT is ERC721, Ownable {
+    struct TokenInfo {
+        address buyer;
+        address seller;
+        uint256 value;
+        uint256 date;
+        string status;
     }
+
+    mapping(uint256 => TokenInfo) private _tokenInfo;
+
+    uint256 private _tokenIdCounter;
+
+    event Minted(address indexed owner, uint256 tokenId, address buyer, address seller, uint256 value, uint256 date);
+
+    constructor() ERC721("Letter of Credit", "LOC") Ownable(msg.sender) {
+        _tokenIdCounter = 0;
+    }
+
+    function mint(address buyer, address seller, uint256 value) external onlyOwner {
+        uint256 tokenId = _tokenIdCounter;
+        _safeMint(seller, tokenId);
+
+        _tokenInfo[tokenId] = TokenInfo({
+            buyer: buyer,
+            seller: seller,
+            value: value,
+            issued: block.timestamp,
+            status: "submitted"
+        });
+
+        _tokenIdCounter++;
+    }
+
+
 }
